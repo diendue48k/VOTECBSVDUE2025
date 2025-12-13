@@ -1,0 +1,271 @@
+import * as XLSX from 'xlsx';
+import { Voter, CandidatePhase1, CandidatePhase2, AppData } from '../types';
+
+// Hàm lấy đối tượng XLSX an toàn cho cả môi trường ESM và CommonJS (CDN)
+const getXLSX = (): any => {
+  // @ts-ignore
+  if (XLSX.read) return XLSX;
+  // @ts-ignore
+  if (XLSX.default && XLSX.default.read) return XLSX.default;
+  return XLSX;
+};
+
+// Hàm ánh xạ tiêu đề cột từ tiếng Việt sang key trong code
+// Chấp nhận: "Họ tên", "Họ Tên", "  Họ tên  "
+const mapKeys = (row: any, map: Record<string, string>): any => {
+  const newRow: any = {};
+  const rowKeys = Object.keys(row);
+  
+  for (const [vnKey, enKey] of Object.entries(map)) {
+    // Tìm key trong row khớp với vnKey (không phân biệt hoa thường, khoảng trắng)
+    const foundKey = rowKeys.find(k => k.trim().toLowerCase().includes(vnKey.toLowerCase()));
+    if (foundKey) {
+      newRow[enKey] = row[foundKey];
+    }
+  }
+  return newRow;
+};
+
+export const readVoters = (file: File): Promise<Voter[]> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const X = getXLSX();
+        const data = e.target?.result;
+        const workbook = X.read(data, { type: 'binary' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = X.utils.sheet_to_json(sheet);
+
+        const mappedData = json.map((row: any) => {
+          const mapped = mapKeys(row, {
+            'cccd': 'cccd',
+            'mssv': 'mssv',
+            'họ tên': 'hoTen',
+            'ngày vào': 'ngayVaoDang',
+            'chính thức': 'loaiDangVien',
+            'nhóm': 'nhom'
+          });
+          
+          if(!mapped.cccd || !mapped.hoTen) return null;
+
+          return {
+            cccd: String(mapped.cccd).trim(),
+            mssv: mapped.mssv ? String(mapped.mssv).trim() : '',
+            hoTen: mapped.hoTen,
+            ngayVaoDang: mapped.ngayVaoDang || '',
+            loaiDangVien: mapped.loaiDangVien || '',
+            nhom: mapped.nhom || '',
+            hasVotedPhase1: false,
+            hasVotedPhase2: false
+          };
+        }).filter(Boolean) as Voter[];
+
+        resolve(mappedData);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    reader.readAsBinaryString(file);
+  });
+};
+
+export const readCandidatesP1 = (file: File): Promise<CandidatePhase1[]> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const X = getXLSX();
+        const data = e.target?.result;
+        const workbook = X.read(data, { type: 'binary' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = X.utils.sheet_to_json(sheet);
+
+        const mappedData = json.map((row: any) => {
+          const mapped = mapKeys(row, {
+            'cccd': 'cccd',
+            'mssv': 'mssv',
+            'họ tên': 'hoTen',
+            'ngày vào': 'ngayVaoDang',
+            'chính thức': 'loaiDangVien',
+            'nhóm': 'nhom',
+            'khóa': 'khoa',
+            'lớp': 'lop', // Added
+            'chức vụ': 'chucVu',
+            'điểm ht': 'diemHT',
+            'điểm rl': 'diemRL',
+            'thành tích': 'thanhTich',
+            'tự đánh giá': 'tuDanhGia',
+            'mức độ htnv': 'tuDanhGia',
+            'đề xuất': 'mucDeXuat',
+            'mức đề xuất': 'mucDeXuat'
+          });
+          if(!mapped.cccd) return null;
+          
+          return {
+            ...mapped,
+            cccd: String(mapped.cccd).trim(),
+            mssv: mapped.mssv ? String(mapped.mssv).trim() : '',
+            tuDanhGia: mapped.tuDanhGia || '',
+            mucDeXuat: mapped.mucDeXuat || '',
+            lop: mapped.lop || ''
+          };
+        }).filter(Boolean) as CandidatePhase1[];
+        resolve(mappedData);
+      } catch (err) { reject(err); }
+    };
+    reader.readAsBinaryString(file);
+  });
+};
+
+export const readCandidatesP2 = (file: File): Promise<CandidatePhase2[]> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const X = getXLSX();
+        const data = e.target?.result;
+        const workbook = X.read(data, { type: 'binary' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = X.utils.sheet_to_json(sheet);
+
+        const mappedData = json.map((row: any) => {
+          const mapped = mapKeys(row, {
+            'cccd': 'cccd',
+            'mssv': 'mssv',
+            'họ tên': 'hoTen',
+            'ngày vào': 'ngayVaoDang',
+            'chính thức': 'loaiDangVien',
+            'nhóm': 'nhom',
+            'khóa': 'khoa',
+            'lớp': 'lop', // Added
+            'chức vụ': 'chucVu',
+            'điểm ht': 'diemHT',
+            'điểm rl': 'diemRL',
+            'thành tích': 'thanhTich',
+            'đề xuất': 'chiBoDeXuat',
+            'nhóm đề xuất': 'chiBoDeXuat',
+            'tự đánh giá': 'tuDanhGia',
+            'mức độ htnv': 'tuDanhGia'
+          });
+          if(!mapped.cccd) return null;
+
+          return {
+            ...mapped,
+            cccd: String(mapped.cccd).trim(),
+            mssv: mapped.mssv ? String(mapped.mssv).trim() : '',
+            tuDanhGia: mapped.tuDanhGia || '',
+            lop: mapped.lop || ''
+          };
+        }).filter(Boolean) as CandidatePhase2[];
+        resolve(mappedData);
+      } catch (err) { reject(err); }
+    };
+    reader.readAsBinaryString(file);
+  });
+};
+
+export const exportToExcel = (data: any[], fileName: string) => {
+  try {
+    const X = getXLSX();
+    const ws = X.utils.json_to_sheet(data);
+    const wb = X.utils.book_new();
+    X.utils.book_append_sheet(wb, ws, "Result");
+    X.writeFile(wb, `${fileName}.xlsx`);
+  } catch (e) {
+    console.error("Export error", e);
+    alert("Lỗi xuất file Excel. Vui lòng thử lại.");
+  }
+};
+
+// Hàm mới: Xuất chi tiết ai bầu cho ai
+export const exportVoteAudit = (data: AppData, fileName: string) => {
+  try {
+    const X = getXLSX();
+    const wb = X.utils.book_new();
+
+    // 1. Sheet chi tiết P1
+    const p1Rows = data.votesP1.map(vote => {
+      const voter = data.voters.find(v => v.cccd === vote.voterCCCD);
+      const candidate = data.candidatesP1.find(c => c.cccd === vote.candidateCCCD);
+      return {
+        'CCCD Người Bầu': vote.voterCCCD,
+        'Tên Người Bầu': voter?.hoTen || 'Unknown',
+        'CCCD Người Được Bầu': vote.candidateCCCD,
+        'Tên Người Được Bầu': candidate?.hoTen || 'Unknown',
+        'Mức Đánh Giá': vote.level,
+        'Thời Gian Bầu': voter?.voteTimePhase1 ? new Date(voter.voteTimePhase1).toLocaleString('vi-VN') : ''
+      };
+    });
+    const ws1 = X.utils.json_to_sheet(p1Rows);
+    X.utils.book_append_sheet(wb, ws1, "Chi_Tiet_P1");
+
+    // 2. Sheet chi tiết P2
+    const p2Rows = data.votesP2.map(vote => {
+      const voter = data.voters.find(v => v.cccd === vote.voterCCCD);
+      const candidate = data.candidatesP2.find(c => c.cccd === vote.candidateCCCD);
+      return {
+        'CCCD Người Bầu': vote.voterCCCD,
+        'Tên Người Bầu': voter?.hoTen || 'Unknown',
+        'CCCD Người Được Bầu': vote.candidateCCCD,
+        'Tên Người Được Bầu': candidate?.hoTen || 'Unknown',
+        'Loại Bầu': 'Xuất sắc',
+        'Thời Gian Bầu': voter?.voteTimePhase2 ? new Date(voter.voteTimePhase2).toLocaleString('vi-VN') : ''
+      };
+    });
+    const ws2 = X.utils.json_to_sheet(p2Rows);
+    X.utils.book_append_sheet(wb, ws2, "Chi_Tiet_P2");
+
+    X.writeFile(wb, `${fileName}.xlsx`);
+  } catch (e) {
+    console.error("Export audit error", e);
+    alert("Lỗi xuất báo cáo chi tiết.");
+  }
+};
+
+export const downloadTemplate = (type: 'voters' | 'p1' | 'p2') => {
+  let headers = [];
+  let name = "";
+  if (type === 'voters') {
+    headers = [{ 'CCCD': '0123456789', 'MSSV': 'B123456', 'Họ tên': 'Nguyễn Văn A', 'Ngày vào Đảng': '03/02/2020', 'Chính thức/Dự bị': 'Chính thức', 'Nhóm': 'Chi bộ 1' }];
+    name = "Mau_DS_Cu_Tri";
+  } else if (type === 'p1') {
+    headers = [{ 
+      'CCCD': '0123456789', 
+      'MSSV': 'B123456', 
+      'Họ tên': 'Nguyễn Văn A', 
+      'Ngày vào Đảng': '03/02/2020', 
+      'Chính thức/Dự bị': 'Chính thức', 
+      'Nhóm': 'Chi bộ 1', 
+      'Khóa': 'K46',
+      'Lớp': 'K46-QTKD', // Added
+      'Chức vụ': 'Đảng viên', 
+      'Điểm HT': 90, 
+      'Điểm RL': 85, 
+      'Thành tích': 'Giấy khen',
+      'Tự đánh giá mức độ HTNV': 'Hoàn thành tốt',
+      'Mức đề xuất HTNV': 'Hoàn thành tốt'
+    }];
+    name = "Mau_DS_Bau_P1";
+  } else {
+    // P2: Danh sách đề xuất (Candidates for Phase 2)
+    headers = [{ 
+      'CCCD': '0123456789', 
+      'MSSV': 'B123456', 
+      'Họ tên': 'Nguyễn Văn A', 
+      'Ngày vào Đảng': '03/02/2020', 
+      'Chính thức/Dự bị': 'Chính thức', 
+      'Nhóm': 'Chi bộ 1', 
+      'Khóa': 'K46', 
+      'Lớp': 'K46-QTKD', // Added
+      'Chức vụ': 'Đảng viên', 
+      'Điểm HT': 90, 
+      'Điểm RL': 85, 
+      'Thành tích': 'Giấy khen', 
+      'Đề xuất': 'Phát triển Đảng', 
+      'Tự đánh giá': 'Hoàn thành tốt'
+    }];
+    name = "Mau_Danh_Sach_De_Xuat_P2"; 
+  }
+  exportToExcel(headers, name);
+}
