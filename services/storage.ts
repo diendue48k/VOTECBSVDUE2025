@@ -97,6 +97,42 @@ const sortCandidatesByRank = (list: any[]) => {
     });
 };
 
+const sortCandidatesP2 = (list: any[]) => {
+    if (!Array.isArray(list)) return [];
+    return [...list].sort((a, b) => {
+        // 1. Ưu tiên có Chi bộ đề xuất (chiBoDeXuat)
+        const dxA = String(a.chiBoDeXuat || '').trim();
+        const dxB = String(b.chiBoDeXuat || '').trim();
+        
+        const hasDxA = dxA.length > 0;
+        const hasDxB = dxB.length > 0;
+
+        // Người có đề xuất lên trước
+        if (hasDxA !== hasDxB) {
+            return hasDxA ? -1 : 1;
+        }
+
+        // Nếu cùng có đề xuất, sắp xếp theo tên đề xuất (A-Z) để gom nhóm
+        if (hasDxA) { 
+             const cmp = dxA.localeCompare(dxB, 'vi');
+             if (cmp !== 0) return cmp;
+        }
+
+        // 2. Tiếp theo là Chức vụ (Position Rank)
+        const rankA = getPositionRank(a.chucVu);
+        const rankB = getPositionRank(b.chucVu);
+        if (rankA !== rankB) return rankA - rankB;
+
+        // 3. Khóa
+        const khoaA = String(a.khoa || '').trim();
+        const khoaB = String(b.khoa || '').trim();
+        if (khoaA !== khoaB) return khoaA.localeCompare(khoaB, 'vi', { numeric: true });
+
+        // 4. Tên
+        return (a.hoTen || '').localeCompare(b.hoTen || '', 'vi');
+    });
+};
+
 const mergeConfig = (base: any, incoming: any) => {
     if (!incoming) return base;
     const result = { ...base, ...incoming };
@@ -145,7 +181,7 @@ const initStorage = () => {
                 if (snap.exists()) {
                     const val = snap.val();
                     const list = Array.isArray(val) ? val : Object.values(val);
-                    _inMemoryDB.candidatesP1 = sortCandidatesByRank(list); // Apply sort
+                    _inMemoryDB.candidatesP1 = sortCandidatesByRank(list); // Apply sort P1
                     notifyUpdate();
                 }
             });
@@ -154,7 +190,7 @@ const initStorage = () => {
                 if (snap.exists()) {
                     const val = snap.val();
                     const list = Array.isArray(val) ? val : Object.values(val);
-                    _inMemoryDB.candidatesP2 = sortCandidatesByRank(list); // Apply sort
+                    _inMemoryDB.candidatesP2 = sortCandidatesP2(list); // Apply sort P2
                     notifyUpdate();
                 }
             });
@@ -178,7 +214,7 @@ const loadFromLocal = () => {
             
             // Apply Sort immediately on load
             if (_inMemoryDB.candidatesP1) _inMemoryDB.candidatesP1 = sortCandidatesByRank(_inMemoryDB.candidatesP1);
-            if (_inMemoryDB.candidatesP2) _inMemoryDB.candidatesP2 = sortCandidatesByRank(_inMemoryDB.candidatesP2);
+            if (_inMemoryDB.candidatesP2) _inMemoryDB.candidatesP2 = sortCandidatesP2(_inMemoryDB.candidatesP2);
         }
         notifyUpdate();
     } catch (e) { console.error(e); }
@@ -300,7 +336,7 @@ export const checkVoterStatus = async (cccd: string) => {
 export const saveDB = async (data: AppData): Promise<boolean> => {
     // FORCE SORT BEFORE SAVING
     if (data.candidatesP1) data.candidatesP1 = sortCandidatesByRank(data.candidatesP1);
-    if (data.candidatesP2) data.candidatesP2 = sortCandidatesByRank(data.candidatesP2);
+    if (data.candidatesP2) data.candidatesP2 = sortCandidatesP2(data.candidatesP2); // Use P2 Sort
 
     _inMemoryDB = data;
     notifyUpdate();
