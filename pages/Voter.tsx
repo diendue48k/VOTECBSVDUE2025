@@ -77,11 +77,25 @@ export const VoterPage: React.FC<VoterPageProps> = ({ onLogout }) => {
 
   const determineStep = (): 'p1' | 'p2' | 'completed' | 'closed' => {
       if (!currentUser) return 'closed';
-      if (db.config.isPhase1Open && !currentUser.hasVotedPhase1) return 'p1';
-      if (db.config.isPhase2Open && !currentUser.hasVotedPhase2) return 'p2';
-      if (db.config.isPhase1Open && currentUser.hasVotedPhase1 && !db.config.isPhase2Open) return 'completed';
-      if (db.config.isPhase2Open && currentUser.hasVotedPhase2) return 'completed';
+
+      // 1. Hệ thống đóng hoàn toàn
       if (!db.config.isPhase1Open && !db.config.isPhase2Open) return 'closed';
+
+      // 2. Xử lý Phase 1
+      if (db.config.isPhase1Open) {
+          // Nếu chưa vote P1 -> Bắt buộc ở lại P1
+          if (!currentUser.hasVotedPhase1) return 'p1';
+          // Nếu đã vote P1, code sẽ chạy tiếp xuống dưới để check P2
+      }
+
+      // 3. Xử lý Phase 2 (Chỉ đến đây nếu P1 đóng HOẶC P1 đã vote xong)
+      if (db.config.isPhase2Open) {
+          // Nếu chưa vote P2 -> Vote P2
+          if (!currentUser.hasVotedPhase2) return 'p2';
+          // Nếu đã vote P2, code chạy tiếp xuống dưới
+      }
+
+      // 4. Nếu đã qua hết các check trên mà vẫn chưa return thì nghĩa là đã hoàn thành các phần đang mở
       return 'completed';
   };
 
@@ -849,9 +863,13 @@ export const VoterPage: React.FC<VoterPageProps> = ({ onLogout }) => {
                   <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-600">
                       <CheckCircle className="w-12 h-12"/>
                   </div>
-                  <h2 className="text-2xl font-black text-gray-800 mb-2">Hoàn Tất</h2>
+                  <h2 className="text-2xl font-black text-gray-800 mb-2">
+                      {step === 'closed' ? "Hệ thống Đã Đóng" : "Đã Hoàn Thành"}
+                  </h2>
                   <p className="text-gray-600 max-w-md mx-auto">
-                      {step === 'closed' ? "Hệ thống hiện đang đóng hoặc bạn không có phiên bầu cử nào cần thực hiện." : "Cảm ơn đồng chí đã hoàn thành nghĩa vụ bầu cử. Chúc đồng chí sức khỏe và thành công!"}
+                      {step === 'closed' 
+                        ? "Hệ thống bầu cử hiện đang đóng hoặc chưa diễn ra." 
+                        : "Đồng chí đã hoàn thành tất cả các nội dung bầu cử đang mở. Xin cảm ơn!"}
                   </p>
                   
                   {/* Results or Review could go here if configured */}
