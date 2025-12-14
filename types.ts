@@ -83,6 +83,7 @@ export interface SystemConfig {
   allowReview: boolean; // Cho phép cử tri xem lại kết quả CỦA MÌNH sau khi vote
   allowViewResults: boolean; // Cho phép cử tri xem TOÀN BỘ KẾT QUẢ sau khi vote
   allowBulkVoteP1?: boolean; // Cho phép vote nhanh hàng loạt ở P1
+  allowBulkVoteP2?: boolean; // Cho phép vote nhanh hàng loạt ở P2 (NEW)
   isPhase1Open: boolean;
   isPhase2Open: boolean;
   p1Display: Phase1DisplayConfig;

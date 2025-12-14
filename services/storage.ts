@@ -18,6 +18,7 @@ const INITIAL_DATA: AppData = {
     allowReview: true,
     allowViewResults: false,
     allowBulkVoteP1: true,
+    allowBulkVoteP2: true, // NEW Default
     isPhase1Open: true,
     isPhase2Open: true,
     p1Display: {

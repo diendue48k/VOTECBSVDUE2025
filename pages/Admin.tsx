@@ -526,6 +526,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBack }) => {
                                 <div className="flex items-center gap-2 bg-white/10 px-2 py-1 rounded border border-white/10">
                                     <button onClick={() => updateConfig('allowBulkVoteP1', !data.config.allowBulkVoteP1)} className={`w-8 h-4 rounded-full p-0.5 flex transition-colors ${data.config.allowBulkVoteP1 ? 'bg-green-400 justify-end' : 'bg-gray-400 justify-start'}`}><div className="w-3 h-3 bg-white rounded-full shadow-sm"></div></button><span className="text-xs font-medium text-white/90">Vote nhanh P1</span>
                                 </div>
+                                <div className="flex items-center gap-2 bg-white/10 px-2 py-1 rounded border border-white/10">
+                                    <button onClick={() => updateConfig('allowBulkVoteP2', !data.config.allowBulkVoteP2)} className={`w-8 h-4 rounded-full p-0.5 flex transition-colors ${data.config.allowBulkVoteP2 ? 'bg-green-400 justify-end' : 'bg-gray-400 justify-start'}`}><div className="w-3 h-3 bg-white rounded-full shadow-sm"></div></button><span className="text-xs font-medium text-white/90">Vote nhanh P2</span>
+                                </div>
                             </div>
                         </div>
                         {isOnline && (

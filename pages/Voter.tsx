@@ -209,6 +209,31 @@ export const VoterPage: React.FC<VoterPageProps> = ({ onLogout }) => {
       });
   };
 
+  const handleVoteByProposalP2 = () => {
+    // Select candidates who have 'chiBoDeXuat'
+    // Logic: Select from visible candidates OR from all candidates? 
+    // Usually "Agree with proposal" means agreeing with the FULL proposal list. 
+    // Using visibleCandidatesP2 is safer to respect filters if any, but db.candidatesP2 is more accurate for "Full Slate".
+    // Following P1 logic: use visibleCandidatesP2 to avoid confusion if user filtered something out.
+    
+    const proposedList = visibleCandidatesP2
+        .filter(c => c.chiBoDeXuat && c.chiBoDeXuat.trim().length > 0)
+        .map(c => c.cccd);
+
+    if (proposedList.length === 0) {
+        showNotify("Không tìm thấy ứng viên nào được đề xuất trong danh sách hiển thị.", "error");
+        return;
+    }
+
+    if (proposedList.length > db.config.maxExcellentVotes) {
+        showNotify(`Danh sách đề xuất (${proposedList.length}) lớn hơn số lượng cho phép (${db.config.maxExcellentVotes}). Vui lòng bỏ chọn bớt trước khi nộp.`, "success");
+    } else {
+        showNotify(`Đã chọn ${proposedList.length} ứng viên theo đề xuất.`);
+    }
+
+    setVotesP2(proposedList);
+  };
+
   const submitP2 = async () => {
       if (!currentUser) return;
       setLoading(true);
@@ -493,6 +518,19 @@ export const VoterPage: React.FC<VoterPageProps> = ({ onLogout }) => {
                         </div>
                         <div className="flex gap-2 shrink-0">
                             <button onClick={handleVoteByProposal} className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded hover:bg-indigo-700 shadow-sm whitespace-nowrap">Đồng ý</button>
+                        </div>
+                     </div>
+                 )}
+
+                 {/* Bulk Action P2 - NEW */}
+                 {step === 'p2' && db.config.allowBulkVoteP2 && (
+                     <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-3 flex flex-row items-center justify-between gap-3 animate-in slide-in-from-top-2">
+                        <div className="text-xs md:text-sm text-indigo-900 font-bold flex items-center gap-2 leading-tight">
+                            <Zap className="w-4 h-4 text-indigo-600 shrink-0"/>
+                            <span>Đồng ý theo Chi bộ đề xuất?</span>
+                        </div>
+                        <div className="flex gap-2 shrink-0">
+                            <button onClick={handleVoteByProposalP2} className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded hover:bg-indigo-700 shadow-sm whitespace-nowrap">Đồng ý</button>
                         </div>
                      </div>
                  )}
