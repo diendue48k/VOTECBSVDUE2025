@@ -26,6 +26,7 @@ export const VoterPage: React.FC<VoterPageProps> = ({ onLogout }) => {
   
   // NEW FILTERS
   const [filterKhoa, setFilterKhoa] = useState<string>('all');
+  const [filterNhom, setFilterNhom] = useState<string>('all'); // Added Nhom Filter
   const [filterDeXuat, setFilterDeXuat] = useState<string>('all');
   
   // UI State for long text expansion
@@ -93,6 +94,12 @@ export const VoterPage: React.FC<VoterPageProps> = ({ onLogout }) => {
       return Array.from(items).sort();
   }, [db.candidatesP1, db.candidatesP2, step]);
 
+  const uniqueNhom = useMemo(() => {
+      const source = step === 'p1' ? db.candidatesP1 : db.candidatesP2;
+      const items = new Set(source.map(c => c.nhom).filter(Boolean));
+      return Array.from(items).sort();
+  }, [db.candidatesP1, db.candidatesP2, step]);
+
   const uniqueDeXuat = useMemo(() => {
     if (step !== 'p1') return [];
     const items = new Set(db.candidatesP1.map(c => c.mucDeXuat).filter(Boolean));
@@ -110,11 +117,12 @@ export const VoterPage: React.FC<VoterPageProps> = ({ onLogout }) => {
           
           // Apply Filters
           if (filterKhoa !== 'all' && c.khoa !== filterKhoa) return false;
+          if (filterNhom !== 'all' && c.nhom !== filterNhom) return false;
           if (filterDeXuat !== 'all' && c.mucDeXuat !== filterDeXuat) return false;
 
           return true;
       });
-  }, [db.candidatesP1, searchTerm, hideVotedP1, votesP1, filterKhoa, filterDeXuat]);
+  }, [db.candidatesP1, searchTerm, hideVotedP1, votesP1, filterKhoa, filterNhom, filterDeXuat]);
 
   const handleVoteP1Change = (candidateCCCD: string, level: VoteLevel1) => {
       setVotesP1(prev => ({ ...prev, [candidateCCCD]: level }));
@@ -164,13 +172,14 @@ export const VoterPage: React.FC<VoterPageProps> = ({ onLogout }) => {
         
         // P2 Filter
         if (filterKhoa !== 'all' && c.khoa !== filterKhoa) return false;
+        if (filterNhom !== 'all' && c.nhom !== filterNhom) return false;
 
         // Hide Selected Filter
         if (hideSelectedP2 && votesP2.includes(c.cccd)) return false;
         
         return true;
     });
-  }, [db.candidatesP2, searchTerm, filterKhoa, hideSelectedP2, votesP2]);
+  }, [db.candidatesP2, searchTerm, filterKhoa, filterNhom, hideSelectedP2, votesP2]);
 
   const toggleVoteP2 = (candidateCCCD: string) => {
       setVotesP2(prev => {
@@ -433,6 +442,17 @@ export const VoterPage: React.FC<VoterPageProps> = ({ onLogout }) => {
                         <button onClick={() => setFilterKhoa('all')} className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${filterKhoa === 'all' ? 'bg-[#BE1E2D] text-white border-[#BE1E2D]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>Tất cả Khóa</button>
                         {uniqueKhoa.map(k => (
                             <button key={k} onClick={() => setFilterKhoa(k)} className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${filterKhoa === k ? 'bg-[#BE1E2D] text-white border-[#BE1E2D]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>{k}</button>
+                        ))}
+                     </div>
+                     
+                     {/* Nhom Filter (New) */}
+                     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                        <div className="w-7 h-7 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
+                            <Users className="w-3.5 h-3.5 text-orange-600"/>
+                        </div>
+                        <button onClick={() => setFilterNhom('all')} className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${filterNhom === 'all' ? 'bg-orange-600 text-white border-orange-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>Tất cả Nhóm</button>
+                        {uniqueNhom.map(n => (
+                            <button key={n} onClick={() => setFilterNhom(n)} className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${filterNhom === n ? 'bg-orange-600 text-white border-orange-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>{n}</button>
                         ))}
                      </div>
                      
